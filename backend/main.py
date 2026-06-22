@@ -23,6 +23,25 @@ class ReviewRequest(BaseModel):
     text: str
 
 
+@app.get("/api/info")
+def info():
+    """项目信息接口——面试官打开API第一眼就能看到这是什么。"""
+    return {
+        "name": "合同条款风险审查助手",
+        "name_en": "Contract Clause Risk Reviewer",
+        "version": "1.0.0",
+        "description": "上传合同，逐条并发审查风险等级，高风险优先显示",
+        "description_en": "Concurrent clause-by-clause risk assessment; High/Medium/Low/None with revision suggestions",
+        "architecture": "parallel review (asyncio.gather), conservative scoring design",
+        "github": "https://github.com/henghenghuang288/contract-review-agent",
+        "endpoints": [
+                "/api/health",
+                "/api/review",
+                "/api/review/upload"
+        ]
+}
+
+
 @app.get("/api/health")
 def health():
     return {"status": "ok", "live_mode": is_live()}
