@@ -1,50 +1,42 @@
-# 合同条款风险审查助手
+# Contract Clause Risk Reviewer
 
-把一份合同逐条过一遍,标出风险在哪。粘贴合同或条款文本,系统按条款切分后逐条审查,标注**风险等级(高/中/低/无)、风险点、修改建议**,高风险排在最前。
+> 🇨🇳 [中文版见下方](#中文说明)
 
-## 它解决什么
+Upload a contract, get a structured risk assessment — clause by clause. Each clause is scored High / Medium / Low / None risk with a specific issue description and revision suggestion. High-risk clauses surface first.
 
-法务或业务方拿到合同,人工逐条看既慢又容易漏。这个工具自动按条款切分、逐条审查,快速定位需要重点关注的条款——尤其是单方权利、不对等责任、最终解释权这类对一方明显不利的表述,帮使用者在有限时间里先抓住高风险点。
+**Live demo:** deploy via `render.yaml` or `docker compose up`
 
-## 设计取舍
+## Design Principles
 
-**判断克制,不制造恐慌。** 法务工具最怕误报高风险——一旦使用者发现工具动不动报"高危",就会失去信任。所以系统提示明确要求:只基于条款文字本身判断、不臆测合同外背景、拿不准的标"中"而不是"高"。
+**Parallel by default.** Contract clauses are independent of each other — no clause depends on another's result. Uses `asyncio.gather` to review all clauses concurrently. A 20-clause contract takes roughly the same time as a 1-clause contract.
 
-**条款级并发。** 各条款相互独立,用 `asyncio.gather` 并发审查,条款多时显著提速。这是真实的并发场景(与另一个项目 ecom-agent-crew 里"角色有依赖必须顺序执行"形成对照,代码里对两种情况都做了说明,不为了用并发而伪造并发)。
+**Deliberately conservative scoring.** Legal tools that cry wolf lose user trust fast. The system prompt explicitly instructs: base judgment only on the clause text itself (no background assumptions), and when uncertain, mark Medium — not High. Avoiding false alarms is a feature, not a bug.
 
-**离线降级。** 无 API Key 时用关键词规则做简化版风险初判(命中"有权单方""最终解释权"等标高,"违约金""保密"等标中),让整条流程在没有 key 时也能完整演示。
+**Contrast with ecom-agent-crew:** that project uses sequential execution because agents depend on each other. This project uses concurrency because clauses are independent. Same async primitives, opposite architectural choice — driven by dependency structure.
 
-## 三个项目的关系
+## Offline Mode
 
-这是一组演示不同 Agent 应用形态的项目:
+Keyword rules handle offline scoring (matches "有权单方", "最终解释权" → High; "违约金", "保密" → Medium). Full semantic judgment requires an API key.
 
-- **doc-qa-agent**:单 Agent + 工具调用,基于文档精确问答 + 防幻觉 + 评估体系
-- **ecom-agent-crew**:多 Agent 角色协同,把运营链路自动化
-- **contract-review-agent(本项目)**:对文档逐条审查与风险标记,评估/审计型
+## Stack
 
-## 技术栈
+Python · FastAPI · asyncio · DeepSeek/OpenAI-compatible · Docker
 
-- 后端:Python + FastAPI,全异步,条款级并发审查
-- 模型:厂商中立,DeepSeek / OpenAI / 内网自建模型按环境变量自动切换,无 key 降级离线规则
-- 前端:原生 HTML/JS,法律文书风格的风险标记视图
-- 记录耗时与 token 消耗
-
-## 本地运行
+## Quick Start
 
 ```bash
 pip install -r requirements.txt
-export DEEPSEEK_API_KEY=sk-xxxx   # 可选,无 key 走离线规则模式
+export DEEPSEEK_API_KEY=sk-xxxx   # optional
 uvicorn backend.main:app --reload
 ```
 
-访问 http://localhost:8000
+---
 
-## 部署
+## 中文说明
 
-含 `render.yaml`(Render 一键部署)与 `Dockerfile`(私有化部署到企业内网——合同属敏感数据,私有化部署尤其有意义)。智能模式在环境变量加 `DEEPSEEK_API_KEY` 开启。
+上传合同，逐条审查风险等级，高风险排最前，每条给出风险点和修改建议。
 
-## 已知局限
-
-- 演示版仅支持 txt/md 文本;真实场景需要接 PDF/Word 解析(doc-qa-agent 里已实现这部分,可复用)
-- 条款切分用启发式规则,复杂排版的合同可能切分不理想
-- AI 辅助审查不构成法律意见,用于快速定位关注点,正式决策需专业法务复核
+**关键设计：**
+- 条款并发审查（asyncio.gather）：合同各条款互相独立，真正可以并发
+- 判断克制：拿不准标"中"不标"高"，法务工具不能制造不必要恐慌
+- 与电商多Agent项目形成对照：那个有依赖所以顺序，这个独立所以并发
