@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>合同条款风险审查助手</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,500;0,6..72,600;1,6..72,400&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#fbfaf7; --ink:#23201b; --ink-soft:#6b655c; --line:#e8e3d8;
+    --rule:#d8d2c4; --high:#b3261e; --high-bg:#fbeae8; --mid:#9a6700; --mid-bg:#fdf6e3;
+    --low:#3a7d44; --low-bg:#edf6ee; --none:#8a847a; --accent:#1f4e5f;
+    --serif:'Newsreader',Georgia,serif; --body:'Inter',system-ui,sans-serif; --mono:'IBM Plex Mono',monospace;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);line-height:1.55;}
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:18px 28px;border-bottom:2px solid var(--ink);flex-wrap:wrap;gap:10px;}
+  .brand{font-family:var(--serif);font-weight:600;font-size:21px;letter-spacing:-0.01em;}
+  .mode{font-family:var(--mono);font-size:11.5px;padding:4px 10px;border:1px solid var(--rule);border-radius:3px;color:var(--ink-soft);}
+  .mode.live{border-color:var(--low);color:var(--low);background:var(--low-bg);}
+  .wrap{max-width:920px;margin:0 auto;padding:30px 28px 64px;}
+  .lede{font-family:var(--serif);font-weight:600;font-size:27px;line-height:1.25;margin:0 0 6px;}
+  .lede .i{font-style:italic;font-weight:400;}
+  .sub{color:var(--ink-soft);font-size:14.5px;max-width:600px;margin-bottom:24px;}
+  .composer{border:1px solid var(--rule);border-radius:6px;background:#fff;overflow:hidden;margin-bottom:20px;}
+  .composer textarea{width:100%;border:none;padding:16px;font-family:var(--mono);font-size:13.5px;line-height:1.6;color:var(--ink);resize:vertical;min-height:160px;}
+  .composer textarea:focus{outline:none;}
+  .composer .bar{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-top:1px solid var(--line);background:var(--paper);flex-wrap:wrap;gap:10px;}
+  .file-label{font-family:var(--mono);font-size:12px;color:var(--ink-soft);cursor:pointer;text-decoration:underline;}
+  .file-label input{display:none;}
+  .run-btn{background:var(--ink);color:#fff;border:none;border-radius:4px;padding:10px 22px;font-family:var(--body);font-weight:600;font-size:14px;cursor:pointer;}
+  .run-btn:hover:not(:disabled){background:var(--accent);}
+  .run-btn:disabled{opacity:.5;cursor:not-allowed;}
+  .summary{display:flex;gap:12px;flex-wrap:wrap;margin:24px 0 18px;}
+  .stat{flex:1;min-width:90px;border:1px solid var(--line);border-radius:6px;padding:12px 14px;background:#fff;}
+  .stat .n{font-family:var(--serif);font-weight:600;font-size:28px;line-height:1;}
+  .stat .l{font-family:var(--mono);font-size:11px;color:var(--ink-soft);margin-top:5px;}
+  .stat.high .n{color:var(--high);} .stat.mid .n{color:var(--mid);}
+  .stat.low .n{color:var(--low);} .stat.none .n{color:var(--none);}
+  .finding{border:1px solid var(--line);border-left-width:4px;border-radius:5px;background:#fff;padding:15px 17px;margin-bottom:12px;}
+  .finding.高{border-left-color:var(--high);} .finding.中{border-left-color:var(--mid);}
+  .finding.低{border-left-color:var(--low);} .finding.无{border-left-color:var(--rule);}
+  .finding .head{display:flex;align-items:center;gap:10px;margin-bottom:9px;}
+  .tag{font-family:var(--mono);font-size:11px;font-weight:500;padding:2px 9px;border-radius:3px;}
+  .tag.高{background:var(--high-bg);color:var(--high);} .tag.中{background:var(--mid-bg);color:var(--mid);}
+  .tag.低{background:var(--low-bg);color:var(--low);} .tag.无{background:#f0ede6;color:var(--none);}
+  .finding .cidx{font-family:var(--mono);font-size:11.5px;color:var(--ink-soft);}
+  .clause-text{font-family:var(--serif);font-size:15px;line-height:1.5;margin-bottom:10px;padding-left:12px;border-left:2px solid var(--line);color:var(--ink);}
+  .kv{margin-bottom:7px;font-size:13.5px;}
+  .kv .k{font-family:var(--mono);font-size:11px;color:var(--ink-soft);margin-right:6px;}
+  .meta-bar{display:flex;gap:18px;flex-wrap:wrap;margin-top:18px;padding:12px 16px;border:1px dashed var(--rule);border-radius:5px;font-family:var(--mono);font-size:12px;color:var(--ink-soft);}
+  .meta-bar b{color:var(--ink);font-weight:500;}
+  .empty{text-align:center;color:var(--ink-soft);padding:30px 0;font-size:14px;font-family:var(--serif);font-style:italic;}
+  .disclaimer{margin-top:22px;font-size:12px;color:var(--ink-soft);line-height:1.6;border-top:1px solid var(--line);padding-top:14px;}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="brand">合同条款风险审查助手</div>
+  <div class="mode" id="modePill">检测模式中…</div>
+</div>
+<div class="wrap">
+  <h1 class="lede">把一份合同 <span class="i">逐条</span> 过一遍,标出风险在哪。</h1>
+  <p class="sub">粘贴合同或条款文本,系统按条款切分后逐条审查,标注风险等级、风险点和修改建议,高风险排在最前。判断克制,拿不准只标"中",不制造恐慌。</p>
+  <div class="composer">
+    <textarea id="contractText" placeholder="把合同条款粘贴到这里…">第一条 甲方有权单方解除本合同,无需提前通知乙方,乙方不得追究甲方任何责任。
+第二条 乙方应在收到货物后7日内付清全部款项,逾期按每日0.5%收取滞纳金。
+第三条 本合同的最终解释权归甲方所有。
+第四条 双方应对本合同涉及的商业信息严格保密,保密期限为合同终止后两年。
+第五条 本合同自双方签字盖章之日起生效。</textarea>
+    <div class="bar">
+      <label class="file-label">上传 txt/md 文件<input type="file" id="fileInput" accept=".txt,.md" /></label>
+      <button class="run-btn" id="runBtn">开始审查</button>
+    </div>
+  </div>
+  <div id="output">
+    <div class="empty">粘贴合同文本,点"开始审查",逐条风险标记会显示在这里。</div>
+  </div>
+  <div class="disclaimer">说明:本工具为 AI 辅助审查,用于快速定位需要关注的条款,不构成法律意见,正式决策请咨询专业法务/律师。判断仅基于条款文字本身,不臆测合同外背景。</div>
+</div>
+<script>
+const runBtn = document.getElementById('runBtn');
+const fileInput = document.getElementById('fileInput');
+const textArea = document.getElementById('contractText');
+const output = document.getElementById('output');
+const modePill = document.getElementById('modePill');
+fetch('/api/health').then(r=>r.json()).then(d=>{
+  modePill.textContent = d.live_mode ? '智能审查 · 在线' : '离线规则模式';
+  modePill.classList.toggle('live', d.live_mode);
+}).catch(()=>{ modePill.textContent='后端未连接'; });
+function esc(s){ const d=document.createElement('div'); d.textContent=s==null?'':String(s); return d.innerHTML; }
+function render(d){
+  if(!d.findings || !d.findings.length){ output.innerHTML='<div class="empty">没有识别到可审查的条款,请检查文本。</div>'; return; }
+  const s = d.summary || {};
+  const summaryHtml = '<div class="summary">'
+    + '<div class="stat high"><div class="n">'+(s['高']||0)+'</div><div class="l">高风险</div></div>'
+    + '<div class="stat mid"><div class="n">'+(s['中']||0)+'</div><div class="l">中风险</div></div>'
+    + '<div class="stat low"><div class="n">'+(s['低']||0)+'</div><div class="l">低风险</div></div>'
+    + '<div class="stat none"><div class="n">'+(s['无']||0)+'</div><div class="l">无风险</div></div>'
+    + '</div>';
+  const items = d.findings.map(f=>{
+    const lv = f.risk_level || '中';
+    return '<div class="finding '+lv+'">'
+      + '<div class="head"><span class="tag '+lv+'">'+esc(lv)+'风险</span><span class="cidx">第 '+f.index+' 条</span></div>'
+      + '<div class="clause-text">'+esc(f.clause)+'</div>'
+      + '<div class="kv"><span class="k">风险</span>'+esc(f.issue)+'</div>'
+      + '<div class="kv"><span class="k">建议</span>'+esc(f.suggestion)+'</div>'
+      + '</div>';
+  }).join('');
+  const meta = '<div class="meta-bar"><span>模式 <b>'+esc(d.mode)+'</b></span><span>条款数 <b>'+d.clauses_count+'</b></span><span>耗时 <b>'+(d.total_latency_ms!=null?d.total_latency_ms+' ms':'-')+'</b></span><span>Token <b>'+(d.total_tokens!=null?d.total_tokens:'—')+'</b></span></div>';
+  output.innerHTML = summaryHtml + items + meta;
+}
+async function runReview(promise){
+  runBtn.disabled=true; runBtn.textContent='审查中…';
+  output.innerHTML='<div class="empty">正在逐条审查…</div>';
+  try{ const d=await promise; if(d.detail){ output.innerHTML='<div class="empty">'+esc(d.detail)+'</div>'; } else { render(d); } }
+  catch(e){ output.innerHTML='<div class="empty">审查失败,请确认后端服务已启动。</div>'; }
+  finally{ runBtn.disabled=false; runBtn.textContent='开始审查'; }
+}
+runBtn.addEventListener('click', ()=>{
+  runReview(fetch('/api/review',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:textArea.value})}).then(r=>r.json()));
+});
+fileInput.addEventListener('change', ()=>{
+  const f=fileInput.files[0]; if(!f) return;
+  const fd=new FormData(); fd.append('file', f);
+  runReview(fetch('/api/review/upload',{method:'POST',body:fd}).then(r=>r.json()));
+});
+</script>
+</body>
+</html>
